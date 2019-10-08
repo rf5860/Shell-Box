@@ -16,6 +16,7 @@ usage: inBox [-h | --help]
              [-l | --light]
              [-v | --heavy]
              [-d | --double]
+             [-a | --ascii]
              [--box-color=<ansi-color>]
              [--text-color=<ansi-color>]
             <text>
@@ -29,6 +30,7 @@ Output control:
   -l, --light               use light-single box-drawing characters 
   -v, --heavy               use heavy-single box-drawing characters
   -d, --double              use double box-drawing characters 
+  -a, --ascii               use ascii-compatible '#' character instead of unicode
   --box-color               ansi color code for the box
   --text-color              ansi color code for the text
 EOF
@@ -57,6 +59,7 @@ inBox() {
             -l|--light)                 mode="1"; str="$(echo "$str" | perl -pe 's/-?-l(ight)? //')" ;;
             -v|--heavy)                 mode="2"; str="$(echo "$str" | perl -pe 's/-?-h(eavy)? //')"  ;;
             -d|--double)                mode="3"; str="$(echo "$str" | perl -pe 's/-?-d(double)? //')" ;;
+            -a|--ascii)                 mode="4"; str="$(echo "$str" | perl -pe 's/-?-a(ascii)? //')" ;;
             -C|--no-color)              str=${str/"$arg"/};str="$(echo "$str" | perl -pe 's/^\s*|\s*$//g')"; boxColor=''; textColor=''; RESET='';;
             --box-color|--text-color)   {
                 key="${arg/#--}"; key="${key%-*}Color";
@@ -68,12 +71,12 @@ inBox() {
             };;
         esac
     done
-    local tr="$( if [[ mode -eq 1 ]]; then echo '┐'; elif [[ mode -eq 2 ]]; then echo '┓'; else echo '╗'; fi)"
-    local br="$( if [[ mode -eq 1 ]]; then echo '┘'; elif [[ mode -eq 2 ]]; then echo '┛'; else echo '╝'; fi)"
-    local tl="$( if [[ mode -eq 1 ]]; then echo '┌'; elif [[ mode -eq 2 ]]; then echo '┏'; else echo '╔'; fi)"
-    local bl="$( if [[ mode -eq 1 ]]; then echo '└'; elif [[ mode -eq 2 ]]; then echo '┗'; else echo '╚'; fi)"
-    local vt="$( if [[ mode -eq 1 ]]; then echo '│'; elif [[ mode -eq 2 ]]; then echo '┃'; else echo '║'; fi)"
-    local hz="$( if [[ mode -eq 1 ]]; then echo '─'; elif [[ mode -eq 2 ]]; then echo '━'; else echo '═'; fi)"
+    local tr="$( if [[ mode -eq 1 ]]; then echo '┐'; elif [[ mode -eq 2 ]]; then echo '┓'; elif [[ mode -eq 3 ]]; then echo '╗'; else echo '#'; fi)"
+    local br="$( if [[ mode -eq 1 ]]; then echo '┘'; elif [[ mode -eq 2 ]]; then echo '┛'; elif [[ mode -eq 3 ]]; then echo '╝'; else echo '#'; fi)"
+    local tl="$( if [[ mode -eq 1 ]]; then echo '┌'; elif [[ mode -eq 2 ]]; then echo '┏'; elif [[ mode -eq 3 ]]; then echo '╔'; else echo '#'; fi)"
+    local bl="$( if [[ mode -eq 1 ]]; then echo '└'; elif [[ mode -eq 2 ]]; then echo '┗'; elif [[ mode -eq 3 ]]; then echo '╚'; else echo '#'; fi)"
+    local vt="$( if [[ mode -eq 1 ]]; then echo '│'; elif [[ mode -eq 2 ]]; then echo '┃'; elif [[ mode -eq 3 ]]; then echo '║'; else echo '#'; fi)"
+    local hz="$( if [[ mode -eq 1 ]]; then echo '─'; elif [[ mode -eq 2 ]]; then echo '━'; elif [[ mode -eq 3 ]]; then echo '═'; else echo '#'; fi)"
 
     if [[ -z "$str" ]];then str="$(perl -e 'local $/;print <> =~ s/^\s*|\s*$//gr' < /dev/stdin)"; fi
     local line="${str//?/${hz}}"

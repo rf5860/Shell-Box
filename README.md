@@ -29,6 +29,7 @@ usage: inBox [-h | --help]
              [-l | --light]
              [-v | --heavy]
              [-d | --double]
+             [-a | --ascii]
              [--box-color=<ansi-color>]
              [--text-color=<ansi-color>]
             <text>
@@ -39,9 +40,10 @@ Miscellaneous:
 
 Output control:
   -C, --no-color            disable coloured output
-  -l, --light               use light-single box-drawing characters
+  -l, --light               use light-single box-drawing characters 
   -v, --heavy               use heavy-single box-drawing characters
-  -d, --double              use double box-drawing characters
+  -d, --double              use double box-drawing characters 
+  -a, --ascii               use ascii-compatible '#' character instead of unicode
   --box-color               ansi color code for the box
   --text-color              ansi color code for the text
 ```
