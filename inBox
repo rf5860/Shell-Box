@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+
+GREEN='\e[32m'
+BLUE='\e[34m'
+RESET='\e[0m'
+
+showVersion() {
+    echo "inBox 0.1.0"
+}
+
+showHelp() {
+    cat <<EOF
+usage: inBox [-h | --help]
+             [-V | --version]
+             [-C | --no-color]
+             [-l | --light]
+             [-v | --heavy]
+             [-d | --double]
+             [--box-color=<ansi-color>]
+             [--text-color=<ansi-color>]
+            <text>
+
+Miscellaneous:
+  -V, --version             display version information and exit
+  -h, --help                display this help text and exit
+
+Output control:
+  -C, --no-color            disable coloured output
+  -l, --light               use light-single box-drawing characters 
+  -v, --heavy               use heavy-single box-drawing characters
+  -d, --double              use double box-drawing characters 
+  --box-color               ansi color code for the box
+  --text-color              ansi color code for the text
+EOF
+}
+
+
+
+inBox() {
+    OPTIND=1 # Reset in case getopts has been used previously in the shell.
+    local str="$*"
+    local boxColor="${GREEN}"
+    local textColor="${BLUE}"
+    # local lightLines=( ┌ ─ ┐  ┘ │ └ )
+    # local heavyLines=( ┏  ━  ┓  ┗  ┃  ┛ )
+    # local doubleLines=( ╔ ═ ╗ ╝ ║ ╚ )
+    local mode="1"
+    if [ $# -eq 0 ]; then
+        showHelp;
+        exit 0;
+    fi
+
+    for arg in "$@"; do
+        case "$arg" in
+            -V|--version)               showVersion; exit 0;;
+            -h|--help)                     showHelp; exit 0;;
+            -l|--light)                 mode="1"; str="$(echo "$str" | perl -pe 's/-?-l(ight)? //')" ;;
+            -v|--heavy)                 mode="2"; str="$(echo "$str" | perl -pe 's/-?-h(eavy)? //')"  ;;
+            -d|--double)                mode="3"; str="$(echo "$str" | perl -pe 's/-?-d(double)? //')" ;;
+            -C|--no-color)              str=${str/"$arg"/};str="$(echo "$str" | perl -pe 's/^\s*|\s*$//g')"; boxColor=''; textColor=''; RESET='';;
+            --box-color|--text-color)   {
+                key="${arg/#--}"; key="${key%-*}Color";
+                keyVal="$(echo "$str" | perl -pe 's/.*(?<keyValue>(?<key>'"$arg"')[= ]?(?<quote>[''"]?)(?<value>\S+)\k<quote>).*/$+{keyValue}/')"
+                eval "$key"='"$(echo "$keyVal" | perl -pe 's/.*'"$arg"'//')"'
+                if [[ -n ${!key} ]]; then eval "${key}='$(echo "${!key}" | perl -pe 's/^\s*|\s*$//g')'"; fi
+                str="$(echo "$str" | perl -pe 's/.*\K\Q'"$keyVal"'\E//')";
+                if [[ -n $str ]]; then str="$(echo "$str" | perl -pe 's/^\s*|\s*$//g')"; fi
+            };;
+        esac
+    done
+    local tr="$( if [[ mode -eq 1 ]]; then echo '┐'; elif [[ mode -eq 2 ]]; then echo '┓'; else echo '╗'; fi)"
+    local br="$( if [[ mode -eq 1 ]]; then echo '┘'; elif [[ mode -eq 2 ]]; then echo '┛'; else echo '╝'; fi)"
+    local tl="$( if [[ mode -eq 1 ]]; then echo '┌'; elif [[ mode -eq 2 ]]; then echo '┏'; else echo '╔'; fi)"
+    local bl="$( if [[ mode -eq 1 ]]; then echo '└'; elif [[ mode -eq 2 ]]; then echo '┗'; else echo '╚'; fi)"
+    local vt="$( if [[ mode -eq 1 ]]; then echo '│'; elif [[ mode -eq 2 ]]; then echo '┃'; else echo '║'; fi)"
+    local hz="$( if [[ mode -eq 1 ]]; then echo '─'; elif [[ mode -eq 2 ]]; then echo '━'; else echo '═'; fi)"
+
+    if [[ -z "$str" ]];then str="$(perl -e 'local $/;print <> =~ s/^\s*|\s*$//gr' < /dev/stdin)"; fi
+    local line="${str//?/${hz}}"
+    echo -e "${boxColor}${tl}${hz}${line}${hz}${tr}";
+    echo -e "${boxColor}${vt} ${textColor}$str${boxColor} ${vt}";
+    echo -e "${boxColor}${bl}${hz}${line}${hz}${br}${RESET}";
+}
+
+inBox "$@"
